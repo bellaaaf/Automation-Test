@@ -1,0 +1,285 @@
+{
+  "info": {
+    "_postman_id": "taskflow-api-collection",
+    "name": "TaskFlow API Tests",
+    "description": "Collection untuk automation testing TaskFlow API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "POST - Create Task",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code should be 201 Created\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.test(\"Response should have correct structure\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('id');",
+              "    pm.expect(jsonData).to.have.property('title');",
+              "    pm.expect(jsonData).to.have.property('description');",
+              "    pm.expect(jsonData).to.have.property('status');",
+              "    pm.expect(jsonData).to.have.property('created_at');",
+              "});",
+              "",
+              "pm.test(\"Title should match sent data\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.title).to.eql(\"Belajar Automation Testing\");",
+              "});",
+              "",
+              "pm.test(\"Status should be 'pending'\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.status).to.eql(\"pending\");",
+              "});",
+              "",
+              "const jsonData = pm.response.json();",
+              "pm.environment.set(\"task_id\", jsonData.id);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"title\": \"Belajar Automation Testing\",\n    \"description\": \"Mempelajari Postman, Newman, dan Selenium\",\n    \"status\": \"pending\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/tasks",
+          "host": ["{{base_url}}"],
+          "path": ["api", "tasks"]
+        }
+      }
+    },
+    {
+      "name": "GET - Get All Tasks",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code should be 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response should be an array\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.be.an('array');",
+              "});",
+              "",
+              "pm.test(\"Response time should be less than 500ms\", function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(500);",
+              "});",
+              "",
+              "pm.test(\"Array should contain at least one task\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.length).to.be.at.least(1);",
+              "});",
+              "",
+              "pm.test(\"Each task should have required properties\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    jsonData.forEach(task => {",
+              "        pm.expect(task).to.have.property('id');",
+              "        pm.expect(task).to.have.property('title');",
+              "        pm.expect(task).to.have.property('status');",
+              "    });",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/api/tasks",
+          "host": ["{{base_url}}"],
+          "path": ["api", "tasks"]
+        }
+      }
+    },
+    {
+      "name": "GET - Get Single Task",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code should be 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Task ID should match requested ID\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    const requestedId = parseInt(pm.environment.get(\"task_id\"));",
+              "    pm.expect(jsonData.id).to.eql(requestedId);",
+              "});",
+              "",
+              "pm.test(\"Should return correct task properties\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('title');",
+              "    pm.expect(jsonData).to.have.property('description');",
+              "    pm.expect(jsonData).to.have.property('status');",
+              "    pm.expect(jsonData).to.have.property('created_at');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/api/tasks/{{task_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "tasks", "{{task_id}}"]
+        }
+      }
+    },
+    {
+      "name": "GET - Non-existent Task (Negative Test)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code should be 404 Not Found\", function () {",
+              "    pm.response.to.have.status(404);",
+              "});",
+              "",
+              "pm.test(\"Error message should be 'Tugas tidak ditemukan'\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.detail).to.eql(\"Tugas tidak ditemukan\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/api/tasks/99999",
+          "host": ["{{base_url}}"],
+          "path": ["api", "tasks", "99999"]
+        }
+      }
+    },
+    {
+      "name": "PUT - Update Task",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code should be 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Title should be updated\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.title).to.include(\"Updated\");",
+              "});",
+              "",
+              "pm.test(\"Status should be updated to 'in-progress'\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.status).to.eql(\"in-progress\");",
+              "});",
+              "",
+              "pm.test(\"Should have updated_at timestamp\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('updated_at');",
+              "    pm.expect(jsonData.updated_at).to.not.be.null;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"title\": \"Belajar Automation Testing - Updated\",\n    \"description\": \"Sudah mempelajari Postman, Newman, dan Selenium\",\n    \"status\": \"in-progress\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/tasks/{{task_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "tasks", "{{task_id}}"]
+        }
+      }
+    },
+    {
+      "name": "DELETE - Delete Task",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code should be 204 No Content\", function () {",
+              "    pm.response.to.have.status(204);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "url": {
+          "raw": "{{base_url}}/api/tasks/{{task_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "tasks", "{{task_id}}"]
+        }
+      }
+    },
+    {
+      "name": "POST - Validation Test (Missing Title)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code should be 422 Unprocessable Entity\", function () {",
+              "    pm.response.to.have.status(422);",
+              "});",
+              "",
+              "pm.test(\"Error should mention missing 'title' field\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    const locs = jsonData.detail.map(d => d.loc).flat();",
+              "    pm.expect(locs).to.include(\"title\");",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"description\": \"Task tanpa judul - seharusnya error\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/tasks",
+          "host": ["{{base_url}}"],
+          "path": ["api", "tasks"]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000"
+    }
+  ]
+}
